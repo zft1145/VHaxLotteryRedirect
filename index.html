@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VHax抽奖跳转站</title>
+    <!-- 无任何UI，仅执行跳转逻辑 -->
+</head>
+<body>
+    <script>
+        (function() {
+            // 标题：VHax抽奖跳转站
+            // 功能：读取同目录下的 cj.txt 文件，获取链接并跳转
+            // 无任何UI，纯跳转
+
+            // 使用 fetch 读取同目录下的 cj.txt
+            fetch('cj.txt', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'text/plain'
+                }
+            })
+            .then(response => {
+                // 检查响应是否成功
+                if (!response.ok) {
+                    throw new Error(`无法读取 cj.txt (HTTP ${response.status})`);
+                }
+                return response.text();
+            })
+            .then(text => {
+                // 获取文本内容，去除首尾空白字符（包括换行、空格等）
+                let url = text.trim();
+                
+                // 如果内容为空，则无跳转（保持页面空白，无UI）
+                if (!url) {
+                    console.warn('cj.txt 内容为空，无跳转目标。');
+                    return;
+                }
+
+                // 简单校验：如果字符串看起来不像一个有效的URL，可加协议前缀或做容错
+                // 但根据需求，直接使用文件中的链接，不做过多处理。
+                // 支持相对路径、绝对路径、http、https 等。
+                // 为防止XSS或无效跳转，此处仅做基础处理。
+                // 如果链接不以 http:// 或 https:// 或 // 开头，且不是相对路径(以/或./或../开头)，添加 window.location.origin 作为基地址
+                // 但更好的做法是直接使用，让浏览器自行解析。
+                // 为防止跳转到 javascript: 等危险协议，做简单过滤
+                const lowerUrl = url.toLowerCase();
+                if (lowerUrl.startsWith('javascript:')) {
+                    console.warn('检测到 javascript: 协议，拒绝跳转。');
+                    return;
+                }
+                if (lowerUrl.startsWith('data:')) {
+                    console.warn('检测到 data: 协议，拒绝跳转。');
+                    return;
+                }
+                if (lowerUrl.startsWith('vbscript:')) {
+                    console.warn('检测到 vbscript: 协议，拒绝跳转。');
+                    return;
+                }
+
+                // 执行跳转
+                window.location.href = url;
+            })
+            .catch(error => {
+                // 如果读取失败（例如文件不存在、跨域等），不进行任何跳转，页面保持空白无UI
+                console.error('VHax抽奖跳转站：读取 cj.txt 失败', error);
+                // 可选：在控制台输出错误，但不显示UI
+            });
+        })();
+    </script>
+    <!-- 确保没有任何UI元素，页面完全空白 -->
+</body>
+</html>
+
